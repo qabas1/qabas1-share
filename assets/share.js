@@ -174,14 +174,6 @@
     });
     openDialog('تغيير كلمة المرور', form, password.input);
   }
-  function formatDate(value) {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('ar', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
-  }
-  function addDetail(list, label, value) {
-    if (value == null || value === '') return;
-    const item = node('div'); item.append(node('dt', '', label), node('dd', '', value)); list.append(item);
-  }
   function previewKind(mime) {
     if (/^image\/(png|jpeg|gif|webp|avif)$/.test(mime)) return 'image';
     if (mime === 'application/pdf') return 'pdf';
@@ -240,11 +232,7 @@
         closeOpenedFile();
         openedFileUrl = URL.createObjectURL(blob);
         openedFileName = filename;
-        const openedData = { ...data };
-        if (typeof openedData.remainingDownloads === 'number') {
-          openedData.remainingDownloads = Math.max(0, openedData.remainingDownloads - 1);
-        }
-        render(openedData, openedFileUrl);
+        render(data, openedFileUrl);
         return;
       }
       const url = URL.createObjectURL(blob);
@@ -282,11 +270,6 @@
     const heading = node('h1', 'visually-hidden');
     const bidi = node('bdi', '', name); bidi.dir = 'auto'; heading.append(bidi);
     layout.append(heading);
-    const details = node('dl', 'file-details');
-    addDetail(details, 'ينتهي في', formatDate(data.expiresAt));
-    if (Object.hasOwn(data, 'remainingDownloads')) {
-      addDetail(details, 'التنزيلات المتبقية', data.remainingDownloads === null ? 'غير محدود' : String(data.remainingDownloads));
-    }
     const kind = previewKind(mime); const url = localUrl || previewUrl(data);
     const section = node('section', 'media-preview');
     section.setAttribute('aria-label', `محتوى الملف: ${name}`);
@@ -295,9 +278,8 @@
     else surface.append(node('p', 'preview-unavailable', kind
       ? 'المعاينة غير متاحة لهذا الرابط. يمكنك تنزيل الملف وفتحه على جهازك.'
       : 'لا يمكن عرض هذا النوع من الملفات هنا. يمكنك تنزيله وفتحه على جهازك.'));
-    if (details.childElementCount) layout.append(details);
-    const form = node('form', 'download-form');
-    const submit = node('button', 'button', 'تنزيل الملف'); submit.type = 'submit';
+    const form = node('form', 'viewer-actions');
+    const submit = node('button', 'button', 'تنزيل'); submit.type = 'submit';
     form.append(submit);
     form.addEventListener('submit', event => {
       event.preventDefault();
@@ -307,8 +289,7 @@
         document.body.append(anchor); anchor.click(); anchor.remove();
       } else download(data, '', submit);
     });
-    layout.append(form);
-    section.append(surface); layout.append(section);
+    section.append(form, surface); layout.append(section);
     if (session.access) layout.append(button('تسجيل الخروج', async () => {
       try { await authRequest('logout', {}, session.access); } catch { /* clear local session regardless */ }
       forgetTokens(); signIn();
