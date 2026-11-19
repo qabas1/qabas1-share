@@ -75,7 +75,18 @@ img { display: block; max-inline-size: 100%; }
 .share-state p { color: var(--muted); }
 .share-state .button { inline-size: auto; margin-block-start: 0.5rem; }
 .eyebrow { color: var(--muted); font-size: 0.875rem; font-weight: 600; }
-.share-help { margin: auto 0 0; padding-block-start: 2rem; color: var(--muted); font-size: 0.875rem; }
+.share-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  margin-block-start: auto;
+  padding-block-start: 2rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.share-footer a { color: var(--forest); text-underline-offset: 0.2em; }
+.share-footer p { margin: 0; }
 .file-view { display: grid; gap: 1.25rem; padding-block: clamp(2.25rem, 6vw, 4rem) 2rem; }
 .file-heading { min-inline-size: 0; }
 .file-name { margin-block: 0.25rem; font-size: clamp(1.5rem, 3.5vw, 2.25rem); line-height: 1.3; overflow-wrap: anywhere; }
