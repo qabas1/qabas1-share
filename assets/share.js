@@ -289,7 +289,9 @@
         document.body.append(anchor); anchor.click(); anchor.remove();
       } else download(data, '', submit);
     });
-    section.append(form, surface); layout.append(section);
+    if (kind && url) section.append(form, surface);
+    else { surface.append(form); section.append(surface); }
+    layout.append(section);
     if (session.access) layout.append(button('تسجيل الخروج', async () => {
       try { await authRequest('logout', {}, session.access); } catch { /* clear local session regardless */ }
       forgetTokens(); signIn();
