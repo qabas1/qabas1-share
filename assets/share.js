@@ -244,26 +244,22 @@
     const name = safeName(data.fileName || data.file?.name || data.name || 'ملف مشترك');
     const mime = String(data.mimeType || data.file?.mimeType || data.contentType || '').toLowerCase().split(';')[0];
     const layout = node('div', 'file-view');
-    const summary = node('div', 'file-heading');
-    const text = node('div'); const heading = node('h1', 'file-name');
+    const heading = node('h1', 'visually-hidden');
     const bidi = node('bdi', '', name); bidi.dir = 'auto'; heading.append(bidi);
-    text.append(node('p', 'eyebrow', 'ملف مشترك'), heading, node('p', 'file-type', mime || 'ملف'));
-    summary.append(text);
+    layout.append(heading);
     const details = node('dl', 'file-details');
     addDetail(details, 'ينتهي في', formatDate(data.expiresAt));
     if (Object.hasOwn(data, 'remainingDownloads')) {
       addDetail(details, 'التنزيلات المتبقية', data.remainingDownloads === null ? 'غير محدود' : String(data.remainingDownloads));
     }
-    layout.append(summary);
     const kind = previewKind(mime); const url = previewUrl(data);
     const section = node('section', 'media-preview');
-    section.setAttribute('aria-label', 'محتوى الملف');
+    section.setAttribute('aria-label', `محتوى الملف: ${name}`);
     const surface = node('div', 'media-surface');
     if (kind && url) showPreview(surface, kind, url, name);
     else surface.append(node('p', 'preview-unavailable', kind
       ? 'المعاينة غير متاحة لهذا الرابط. يمكنك تنزيل الملف وفتحه على جهازك.'
       : 'لا يمكن عرض هذا النوع من الملفات هنا. يمكنك تنزيله وفتحه على جهازك.'));
-    section.append(surface); layout.append(section);
     if (details.childElementCount) layout.append(details);
     const form = node('form', 'download-form');
     let password;
@@ -278,6 +274,7 @@
     form.append(submit);
     form.addEventListener('submit', event => { event.preventDefault(); download(data, password?.input.value || '', submit); });
     layout.append(form);
+    section.append(surface); layout.append(section);
     if (session.access) layout.append(button('تسجيل الخروج', async () => {
       try { await authRequest('logout', {}, session.access); } catch { /* clear local session regardless */ }
       forgetTokens(); signIn();
