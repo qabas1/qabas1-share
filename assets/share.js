@@ -8,6 +8,14 @@
   const authTitle = document.getElementById('auth-title');
   const api = match ? `https://api.qabas.one/api/v1/f/${match[1]}` : '';
   const session = { access: '', refresh: '', expires: 0 };
+  let openedFileUrl = '';
+  let openedFileName = '';
+  function closeOpenedFile() {
+    if (openedFileUrl) URL.revokeObjectURL(openedFileUrl);
+    openedFileUrl = '';
+    openedFileName = '';
+  }
+  addEventListener('pagehide', closeOpenedFile);
 
   function node(tag, className, value) {
     const el = document.createElement(tag);
@@ -60,7 +68,7 @@
     session.refresh = data.refreshToken || '';
     session.expires = Date.now() + Math.max(0, (Number(data.expiresInSeconds) || 0) - 30) * 1000;
   }
-  function forgetTokens() { session.access = ''; session.refresh = ''; session.expires = 0; }
+  function forgetTokens() { session.access = ''; session.refresh = ''; session.expires = 0; closeOpenedFile(); }
   async function authRequest(path, body, bearer = '') {
     const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
     if (bearer) headers.Authorization = `Bearer ${bearer}`;
@@ -90,7 +98,7 @@
   }
   async function errorCode(response) {
     const body = await response.json().catch(() => ({}));
-    return String(body.code || body.error?.code || body.error?.key || body.messageKey || '');
+    return String(body.error?.messageKey || body.messageKey || body.error?.key || body.code || body.error?.code || '');
   }
   function handleError(status, code) {
     if (status === 401) return signIn();
@@ -214,7 +222,8 @@
     return safeName(plain?.[1] || fallback);
   }
   async function download(data, password, submit) {
-    submit.disabled = true; submit.textContent = 'جارٍ تجهيز التنزيل';
+    const originalLabel = submit.textContent;
+    submit.disabled = true; submit.textContent = 'جارٍ فتح الملف';
     try {
       if (previewUrl(data)) { location.assign(api); return; }
       if (data.deliveryMode === 'REDIRECT') {
@@ -226,20 +235,46 @@
       const response = await request(`${api}/download`, { method: 'POST', headers, body });
       if (!response.ok) { handleError(response.status, await errorCode(response)); return; }
       const blob = await response.blob();
+      const filename = dispositionName(response.headers.get('Content-Disposition'), data.fileName || data.name);
+      if (data.hasPassword) {
+        closeOpenedFile();
+        openedFileUrl = URL.createObjectURL(blob);
+        openedFileName = filename;
+        const openedData = { ...data };
+        if (typeof openedData.remainingDownloads === 'number') {
+          openedData.remainingDownloads = Math.max(0, openedData.remainingDownloads - 1);
+        }
+        render(openedData, openedFileUrl);
+        return;
+      }
       const url = URL.createObjectURL(blob);
       const anchor = node('a'); anchor.href = url;
-      anchor.download = dispositionName(response.headers.get('Content-Disposition'), data.fileName || data.name);
+      anchor.download = filename;
       document.body.append(anchor); anchor.click(); anchor.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60000);
-      if (data.hasPassword) {
-        const passwordInput = document.getElementById('link-password');
-        if (passwordInput) passwordInput.value = '';
-      }
       await inspect();
     } catch { message(content, 'تعذّر التنزيل. تحقّق من اتصالك قبل المحاولة مجددًا.'); }
-    finally { submit.disabled = false; submit.textContent = 'تنزيل الملف'; }
+    finally { submit.disabled = false; submit.textContent = originalLabel; }
   }
-  function render(data) {
+  function renderPasswordGate(data) {
+    clear();
+    const gate = node('div', 'access-view');
+    const heading = node('h1', '', 'هذا الملف محمي بكلمة مرور');
+    const intro = node('p', '', 'أدخل كلمة مرور الرابط لفتح الملف.');
+    const form = node('form', 'download-form');
+    const password = field('كلمة مرور الرابط', 'password', 'off');
+    password.input.id = 'link-password';
+    password.wrap.querySelector('label').htmlFor = 'link-password';
+    password.input.addEventListener('input', () => password.input.removeAttribute('aria-invalid'));
+    const note = node('p', 'field-hint', 'فتح الملف يستخدم تنزيلًا واحدًا من الرابط.');
+    const submit = node('button', 'button', 'فتح الملف'); submit.type = 'submit';
+    form.append(password.wrap, note, submit);
+    form.addEventListener('submit', event => { event.preventDefault(); download(data, password.input.value, submit); });
+    gate.append(heading, intro, form);
+    content.append(gate);
+  }
+  function render(data, localUrl = '') {
+    if (data.hasPassword && !localUrl) return renderPasswordGate(data);
     clear();
     const name = safeName(data.fileName || data.file?.name || data.name || 'ملف مشترك');
     const mime = String(data.mimeType || data.file?.mimeType || data.contentType || '').toLowerCase().split(';')[0];
@@ -252,7 +287,7 @@
     if (Object.hasOwn(data, 'remainingDownloads')) {
       addDetail(details, 'التنزيلات المتبقية', data.remainingDownloads === null ? 'غير محدود' : String(data.remainingDownloads));
     }
-    const kind = previewKind(mime); const url = previewUrl(data);
+    const kind = previewKind(mime); const url = localUrl || previewUrl(data);
     const section = node('section', 'media-preview');
     section.setAttribute('aria-label', `محتوى الملف: ${name}`);
     const surface = node('div', 'media-surface');
@@ -262,17 +297,16 @@
       : 'لا يمكن عرض هذا النوع من الملفات هنا. يمكنك تنزيله وفتحه على جهازك.'));
     if (details.childElementCount) layout.append(details);
     const form = node('form', 'download-form');
-    let password;
-    if (data.hasPassword) {
-      password = field('كلمة مرور الرابط', 'password', 'off');
-      password.input.id = 'link-password';
-      password.wrap.querySelector('label').htmlFor = 'link-password';
-      password.input.addEventListener('input', () => password.input.removeAttribute('aria-invalid'));
-      form.append(password.wrap);
-    }
     const submit = node('button', 'button', 'تنزيل الملف'); submit.type = 'submit';
     form.append(submit);
-    form.addEventListener('submit', event => { event.preventDefault(); download(data, password?.input.value || '', submit); });
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      if (localUrl) {
+        const anchor = node('a');
+        anchor.href = localUrl; anchor.download = openedFileName || name;
+        document.body.append(anchor); anchor.click(); anchor.remove();
+      } else download(data, '', submit);
+    });
     layout.append(form);
     section.append(surface); layout.append(section);
     if (session.access) layout.append(button('تسجيل الخروج', async () => {

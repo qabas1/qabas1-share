@@ -16,7 +16,9 @@ Protected links open a native modal for login, two-factor verification, or a req
 
 The browser calls `https://api.qabas.one` only. It inspects a link with `GET /api/v1/f/:token` and `Accept: application/json`, then downloads with `POST /api/v1/f/:token/download`. For a public, password-free `REDIRECT` link, download navigates to the API URL. `STREAM` responses become a `Blob` and use `Content-Disposition` for the filename.
 
-Eligible public `REDIRECT` links display images, audio, and video in the main viewer. PDFs open in the browser's own viewer in a new tab because the private storage origin blocks embedding in a frame. Protected or limited `STREAM` links display a download fallback because the API has no non-consuming preview endpoint. The viewer never spends a limited download merely to show a preview. Native browser codec and PDF support vary.
+Eligible public `REDIRECT` links display images, audio, and video in the main viewer. PDFs open in the browser's own viewer in a new tab because the private storage origin blocks embedding in a frame. Password-protected links show an access screen before any file UI. Entering the correct password calls the API download endpoint, consumes one download slot, and opens the returned `Blob` for preview and saving without a second API request. Other limited `STREAM` links display a download fallback because the API has no non-consuming preview endpoint. Native browser codec and PDF support vary.
+
+The frontend gate hides file details in the page, but `GET /api/v1/f/:token` currently returns metadata for password-protected public links. If the filename and metadata must also remain secret until password verification, the API needs a non-consuming verification flow or must suppress that metadata before verification. The static frontend cannot enforce that boundary by itself.
 
 Login, two-factor verification, refresh, required password change, and logout use the API auth endpoints. Access and refresh tokens live in memory only. Link tokens stay out of page titles, logs, and analytics. The page uses no third-party scripts.
 
