@@ -188,9 +188,17 @@
   }
   function showPreview(target, kind, url, name) {
     target.replaceChildren();
+    if (kind === 'pdf') {
+      const open = node('a', 'button', 'فتح معاينة PDF');
+      open.href = url;
+      open.target = '_blank';
+      open.rel = 'noopener noreferrer';
+      target.append(node('p', 'preview-unavailable', 'افتح ملف PDF في علامة تبويب جديدة لعرضه في قارئ المتصفح.'), open);
+      target.classList.add('pdf-preview');
+      return;
+    }
     let media;
     if (kind === 'image') { media = node('img'); media.alt = `معاينة ${name}`; }
-    if (kind === 'pdf') { media = node('iframe'); media.title = `معاينة PDF: ${name}`; }
     if (kind === 'audio') { media = node('audio'); media.controls = true; media.preload = 'none'; }
     if (kind === 'video') { media = node('video'); media.controls = true; media.preload = 'metadata'; media.playsInline = true; }
     media.src = url;

@@ -103,7 +103,8 @@ img { display: block; max-inline-size: 100%; }
   background: #edf0eb;
 }
 .media-surface img { max-inline-size: 100%; max-block-size: min(72svh, 48rem); object-fit: contain; }
-.media-surface iframe { inline-size: 100%; block-size: min(75svh, 48rem); border: 0; background: white; }
+.pdf-preview { min-block-size: 12rem; align-content: center; gap: 0.5rem; }
+.pdf-preview .button { inline-size: min(100%, 18rem); }
 .media-surface audio { inline-size: min(100%, 36rem); }
 .media-surface video { inline-size: 100%; max-block-size: min(75svh, 48rem); }
 .preview-unavailable { max-inline-size: 32ch; padding: 1rem; color: var(--muted); text-align: center; }

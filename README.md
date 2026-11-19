@@ -16,7 +16,7 @@ Protected links open a native modal for login, two-factor verification, or a req
 
 The browser calls `https://api.qabas.one` only. It inspects a link with `GET /api/v1/f/:token` and `Accept: application/json`, then downloads with `POST /api/v1/f/:token/download`. For a public, password-free `REDIRECT` link, download navigates to the API URL. `STREAM` responses become a `Blob` and use `Content-Disposition` for the filename.
 
-Eligible public `REDIRECT` links display images, PDFs, audio, and video in the main viewer. Protected or limited `STREAM` links display a download fallback because the API has no non-consuming preview endpoint. The viewer never spends a limited download merely to show a preview. Native browser codec and PDF support vary.
+Eligible public `REDIRECT` links display images, audio, and video in the main viewer. PDFs open in the browser's own viewer in a new tab because the private storage origin blocks embedding in a frame. Protected or limited `STREAM` links display a download fallback because the API has no non-consuming preview endpoint. The viewer never spends a limited download merely to show a preview. Native browser codec and PDF support vary.
 
 Login, two-factor verification, refresh, required password change, and logout use the API auth endpoints. Access and refresh tokens live in memory only. Link tokens stay out of page titles, logs, and analytics. The page uses no third-party scripts.
 
@@ -27,5 +27,7 @@ Login, two-factor verification, refresh, required password change, and logout us
 - The Worker sets `Referrer-Policy: no-referrer` and `Cache-Control: no-store` for `/f/*`. Bypass Cloudflare caching for that path and exclude token-bearing URLs from access logs. The root page is a static 404 design, but Pages returns HTTP 200 for `/`.
 - Allow `share.qabas.one` in the API CORS configuration. Expose `Content-Disposition` and `Retry-After` as needed.
 - Keep the API as the authority for access and download limits. Never treat previously loaded metadata as permanent access.
+
+If a valid 32-character `/f/:token` URL still returns HTTP 404 while its file view appears, GitHub Pages is serving `404.html` directly and the Cloudflare Worker route is not active. Confirm the Worker is deployed and attached to `share.qabas.one/f/*` under **Settings → Domains & Routes**. Do not add Google Fonts to the page CSP to fix PDF iframe errors; the storage origin refuses framing, so PDFs open in a new tab instead.
 
 The local fonts and visual assets live in `assets/`. There is no build step.
