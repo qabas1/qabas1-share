@@ -1,57 +1,31 @@
-# قَبَسْ · File sharing
+# قَبَسْ · File sharing recipient
 
-Arabic, right-to-left HTML/CSS for `share.qabas.one`. The source uses the supplied Qabas monogram and palette, with locally served IBM Plex Sans Arabic and Inter. The included preview shows demo files and recipient states. Live share links require a runtime API integration.
+Small Arabic, right-to-left frontend for managed file links.
 
-## Preview locally
+## Routes and screens
 
-Run from this directory and open [the recipient preview](http://127.0.0.1:8080/preview/).
-
-```sh
-python3 -m http.server 8080 --bind 127.0.0.1
-```
-
-Use the radio controls to preview public links, password entry and validation, sign-in, access denied, an unavailable link, the download limit, rate limiting, a delivery error, a connection error, and inspection in progress. The public example downloads the included Qabas mark. Password fields accept sample input for keyboard and layout review.
-
-| Path | Purpose |
+| URL | Screen |
 | --- | --- |
-| `index.html` | Share-domain home and demo entry point |
-| `404.html` | GitHub Pages fallback |
-| `preview/index.html` | Recipient UI states with sample data |
-| `assets/share.css` | Shared layout, components, and responsive styling |
-| `assets/fonts/` | Local web fonts and their SIL Open Font Licenses |
+| `/f/:token` | File content, metadata, and download. A valid token has exactly 32 URL-safe characters. |
+| `/f/:token` with an API error | Focused error state with the available next step. |
+| Any other path | 404. `/` has a static 404 page; `404.html` renders 404 for invalid paths. |
 
-## GitHub Pages
+Protected links open a native modal for login, two-factor verification, or a required account password change. A link password is a separate field on the file page. No page has a navigation header. The `/preview/` demo route has been removed.
 
-1. Copy the project contents, including `.nojekyll`, to the repository root. In **Settings → Pages**, choose **Deploy from a branch**, select the publishing branch, and choose `/ (root)`.
-2. Set the custom domain to `share.qabas.one`. Set the `share` DNS CNAME to `<github-owner>.github.io`, then enable **Enforce HTTPS** after validation. The included `CNAME` identifies the custom domain. Asset URLs are root-relative so the fallback can load them at any depth on that domain.
-3. For a live rollout, place an edge proxy in front of Pages. For `share.qabas.one/f/*`, set `Referrer-Policy: no-referrer` and `Cache-Control: no-store` on the HTTP response, and bypass edge caching. With Cloudflare, use a Response Header Transform Rule and a separate Cache Rule. A request for a nonexistent path displays `404.html` with a 404 status on Pages. An edge rewrite to the app shell can serve a 200 for valid-shaped share routes while preserving the browser URL.
+## API
 
-The HTML sets the document referrer policy to `no-referrer`. Verify the HTTP headers separately at the edge using a synthetic path. Keep token-bearing paths out of telemetry and logs.
+The browser calls `https://api.qabas.one` only. It inspects a link with `GET /api/v1/f/:token` and `Accept: application/json`, then downloads with `POST /api/v1/f/:token/download`. For a public, password-free `REDIRECT` link, download navigates to the API URL. `STREAM` responses become a `Blob` and use `Content-Disposition` for the filename.
 
-[Pages custom domain](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site) · [Pages fallback](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-custom-404-page-for-your-github-pages-site) · [Cloudflare response headers and caching](https://developers.cloudflare.com/rules/transform/response-header-modification/#important-remarks)
+Eligible public `REDIRECT` links display images, PDFs, audio, and video in the main viewer. Protected or limited `STREAM` links display a download fallback because the API has no non-consuming preview endpoint. The viewer never spends a limited download merely to show a preview. Native browser codec and PDF support vary.
 
-## Live integration contract
+Login, two-factor verification, refresh, required password change, and logout use the API auth endpoints. Access and refresh tokens live in memory only. Link tokens stay out of page titles, logs, and analytics. The page uses no third-party scripts.
 
-Use `https://api.qabas.one` as the only API origin. Validate the `/f/:token` path against `^/f/[A-Za-z0-9_-]{32}$` before sending a request. Keep the share token out of titles, sign-in redirect queries, telemetry, and client logs. A sign-in handoff should return an access token through the trusted Qabas authentication flow and resume the share page.
+## Deployment requirements
 
-| Operation | Request |
-| --- | --- |
-| Inspect | `GET /api/v1/f/:token` with `Accept: application/json`. Read the `data` envelope for file name, MIME type, restrictions, expiry, and remaining downloads. `null` means unlimited. |
-| Download | `POST /api/v1/f/:token/download`. If the link has a password, send `Content-Type: application/json`, `Accept-Language: ar`, and `{ "password": "…" }`. Otherwise, omit the body or send `{}`. |
-| Public `REDIRECT` without a password | Navigate directly to the API `GET /api/v1/f/:token` URL on the user's download action. |
-| Authenticated or password-protected `REDIRECT` | Show the delivery error. Create a `STREAM` link for this case. |
+- Serve `404.html` with HTTP 200 for valid `/f/:token` paths, preserving the URL. GitHub Pages alone serves it with HTTP 404; an edge rewrite is required.
+- Keep invalid paths at HTTP 404. The root page is a static 404 design, but the host must also return a 404 status for `/` if that status matters to indexing and monitoring.
+- Set `Referrer-Policy: no-referrer` and `Cache-Control: no-store` for `/f/*` responses. Bypass edge caching and exclude token-bearing URLs from logs.
+- Allow `share.qabas.one` in the API CORS configuration. Expose `Content-Disposition` and `Retry-After` as needed.
+- Keep the API as the authority for access and download limits. Never treat previously loaded metadata as permanent access.
 
-Omit `Authorization` for public links. Send the bearer on inspection and download for authenticated links. An inspection `401` starts sign-in, followed by a fresh inspection. For `STREAM`, handle a successful download as a binary `Blob` and use the exposed `Content-Disposition` when naming the file. Check the download response independently of inspection. A download attempt can consume a single-use link, so each attempt must be initiated by the user.
-
-| API response | Recipient state |
-| --- | --- |
-| `401` | Sign-in required |
-| `403` with `fileShares.passwordInvalid` | Inline link password error |
-| Other `403` | Account lacks access |
-| `404` | Link unavailable |
-| `409` with `fileShares.limitReached` | Download limit reached |
-| `429` | Rate-limited. Use `Retry-After` when specified. |
-
-Allow `share.qabas.one` in `CORS_ALLOWED_DOMAINS` unless the API already trusts the `qabas.one` parent. Expose `Content-Disposition` and, if present, `Retry-After` to the frontend through CORS. `SHARE_PUBLIC_BASE_URL=https://share.qabas.one` sets the share origin if overriding the API's production default. Creation and management are handled in the signed-in Qabas dashboard.
-
-[Exposing response headers to cross-origin clients](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Expose-Headers)
+The local fonts and visual assets live in `assets/`. There is no build step.
