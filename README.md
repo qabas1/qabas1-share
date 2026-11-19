@@ -22,9 +22,9 @@ Login, two-factor verification, refresh, required password change, and logout us
 
 ## Deployment requirements
 
-- Serve `404.html` with HTTP 200 for valid `/f/:token` paths, preserving the URL. GitHub Pages alone serves it with HTTP 404; an edge rewrite is required.
-- Keep invalid paths at HTTP 404. The root page is a static 404 design, but the host must also return a 404 status for `/` if that status matters to indexing and monitoring.
-- Set `Referrer-Policy: no-referrer` and `Cache-Control: no-store` for `/f/*` responses. Bypass edge caching and exclude token-bearing URLs from logs.
+- In repository **Settings → Pages → Build and deployment**, select **GitHub Actions**. `.github/workflows/pages.yml` publishes the static files on every push to `main`. Keep `share.qabas.one` configured as the Pages custom domain and keep its DNS record proxied through Cloudflare.
+- Deploy `edge/share-route.mjs` with `npx wrangler@latest deploy` after authenticating Wrangler to the Cloudflare account for `qabas.one`. Its route is configured in `wrangler.jsonc` as `share.qabas.one/f/*`. It serves the GitHub Pages shell with HTTP 200 for valid link paths, preserves the URL, and returns 404 for invalid link paths. GitHub Pages alone returns HTTP 404 for a valid dynamic path.
+- The Worker sets `Referrer-Policy: no-referrer` and `Cache-Control: no-store` for `/f/*`. Bypass Cloudflare caching for that path and exclude token-bearing URLs from access logs. The root page is a static 404 design, but Pages returns HTTP 200 for `/`.
 - Allow `share.qabas.one` in the API CORS configuration. Expose `Content-Disposition` and `Retry-After` as needed.
 - Keep the API as the authority for access and download limits. Never treat previously loaded metadata as permanent access.
 
