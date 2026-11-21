@@ -33,3 +33,5 @@ Login, two-factor verification, refresh, required password change, and logout us
 If a valid 32-character `/f/:token` URL still returns HTTP 404 while its file view appears, GitHub Pages is serving `404.html` directly and the Cloudflare Worker route is not active. Confirm the Worker is deployed and attached to `share.qabas.one/f/*` under **Settings → Domains & Routes**. Do not add Google Fonts to the page CSP to fix PDF iframe errors; the storage origin refuses framing, so PDFs open in a new tab instead.
 
 The local fonts and visual assets live in `assets/`. There is no build step.
+
+- The container.yml workflow builds and publishes ghcr.io/<owner>/qabas1-share on pushes to main and dev, tagged with the branch name and commit SHA. The image serves the static site on port 8080 (docker run -p 8080:8080 ...).
