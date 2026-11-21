@@ -35,3 +35,5 @@ If a valid 32-character `/f/:token` URL still returns HTTP 404 while its file vi
 The local fonts and visual assets live in `assets/`. There is no build step.
 
 - The container.yml workflow builds and publishes ghcr.io/<owner>/qabas1-share on pushes to main and dev, tagged with the branch name and commit SHA. The image serves the static site on port 8080 (docker run -p 8080:8080 ...).
+
+- The container reads API_BASE_URL at startup (default: https://api.qabas.one). Copy .env.example to .env, set API_BASE_URL, then run with docker run --env-file .env -p 8080:8080 ghcr.io/<owner>/qabas1-share:dev. The value is an API origin; /api/v1 is added by the page.

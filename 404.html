@@ -5,7 +5,7 @@
     <meta name="referrer" content="no-referrer" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self'; connect-src https://api.qabas.one; img-src 'self' blob: https:; media-src blob: https:; style-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'"
+      content="default-src 'none'; script-src 'self'; connect-src http: https:; img-src 'self' blob: https:; media-src blob: https:; style-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
@@ -20,6 +20,7 @@
     <script src="/assets/share.js" defer></script>
   </head>
   <body class="recipient-page">
+    <script src="/env-config.js"></script>
     <a class="skip-link" href="#main">انتقل إلى المحتوى</a>
     <main class="share-shell" id="main" tabindex="-1">
       <div class="share-brand" aria-label="قَبَسْ">

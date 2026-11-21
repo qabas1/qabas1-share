@@ -2,11 +2,12 @@
 (() => {
   const content = document.getElementById('share-content');
   if (!content) return;
+  const apiBaseUrl = (window.__ENV__?.API_BASE_URL || 'https://api.qabas.one').replace(/\/+$/, '');
   const match = /^\/f\/([A-Za-z0-9_-]{32})\/?$/.exec(location.pathname);
   const dialog = document.getElementById('auth-dialog');
   const authContent = document.getElementById('auth-content');
   const authTitle = document.getElementById('auth-title');
-  const api = match ? `https://api.qabas.one/api/v1/f/${match[1]}` : '';
+  const api = match ? `${apiBaseUrl}/api/v1/f/${match[1]}` : '';
   const session = { access: '', refresh: '', expires: 0 };
   let openedFileUrl = '';
   let openedFileName = '';
@@ -72,7 +73,7 @@
   async function authRequest(path, body, bearer = '') {
     const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
     if (bearer) headers.Authorization = `Bearer ${bearer}`;
-    const response = await fetch(`https://api.qabas.one/api/v1/auth/${path}`, {
+    const response = await fetch(`${apiBaseUrl}/api/v1/auth/${path}`, {
       method: 'POST', headers, body: JSON.stringify(body), cache: 'no-store', referrerPolicy: 'no-referrer'
     });
     const payload = await response.json().catch(() => ({}));
