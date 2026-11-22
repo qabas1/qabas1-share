@@ -1,4 +1,4 @@
-/** @typedef {{key:string,type:string,label:string,required:boolean,description?:string,errorMessage?:string,constraints?:Record<string,any>}} RelayField */
+/** @typedef {{key:string,type:string,label:string,required:boolean,description?:string,placeholder?:string,errorMessage?:string,constraints?:Record<string,any>}} RelayField */
 /** @typedef {{schemaVersion:number,locale:string,title:string,fields:RelayField[]}} RelayForm */
 /** @typedef {{title:string,instructions?:string,expiresAt:string,allowPartial:boolean,allowMultiple:boolean,status:string,form:RelayForm}} RelayRequest */
 export class RelayError extends Error {

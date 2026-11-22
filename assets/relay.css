@@ -10,7 +10,8 @@
 .relay-field{display:grid;gap:.45rem;min-inline-size:0}
 .relay-field>label{font-weight:600;font-size:1.05rem;line-height:1.45}
 .optional,.required{font-size:.85rem;font-weight:400;color:var(--muted)}
-.relay-input,.relay-file{inline-size:100%;min-block-size:3.25rem;padding:.7rem .85rem;border:1px solid #808e81;border-radius:.625rem;background:#fff;color:var(--ink)}
+.relay-input,.relay-file{inline-size:100%;min-inline-size:0;min-block-size:3.25rem;padding:.7rem .85rem;border:1px solid #808e81;border-radius:.625rem;background:#fff;color:var(--ink);font:inherit}
+.relay-input::placeholder{color:var(--muted);opacity:1}
 .relay-numeric{text-align:right}
 textarea.relay-input{min-block-size:7rem;resize:vertical}
 .relay-check{grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:.75rem}
@@ -18,7 +19,7 @@ textarea.relay-input{min-block-size:7rem;resize:vertical}
 .relay-check label{grid-column:2;grid-row:1}
 .relay-check .relay-error{grid-column:1/-1}
 .relay-input[aria-invalid="true"],.relay-file[aria-invalid="true"]{border:2px solid var(--error)}
-.relay-error{color:var(--error);font-size:.9rem}
+.relay-error{color:var(--error);font-size:.9rem;overflow-wrap:anywhere}
 .relay-upload{display:grid;gap:.85rem;padding:1rem;border:1px dashed #829486;border-radius:.75rem;background:#edf1eb}
 .relay-upload-prompt{font-weight:600;color:var(--forest)}
 .relay-upload-actions{display:flex;flex-wrap:wrap;gap:.65rem}
@@ -38,5 +39,6 @@ textarea.relay-input{min-block-size:7rem;resize:vertical}
 .relay-actions{display:grid;gap:.75rem;padding-block-start:.5rem}
 .relay-actions .button{max-inline-size:20rem}
 @media(max-width:40rem){.relay-page .share-shell{inline-size:calc(100% - 2rem)}.relay-layout{gap:1.5rem;padding-block:1.5rem}.relay-actions .button{max-inline-size:none}.relay-file-row{align-items:flex-start}.relay-upload-actions{display:grid}.relay-upload-button,.relay-camera-button{inline-size:100%}}
+@media(max-width:22rem){.relay-upload{padding:.75rem}.relay-layout{padding-block:1rem}}
 @media(max-height:36rem) and (orientation:landscape){.relay-layout{padding-block:1rem;gap:1.25rem}.relay-form{gap:1rem}}
 @media(forced-colors:active){.relay-input,.relay-file,.relay-file-row,.relay-small-button,.relay-upload,.relay-upload-button,.relay-camera-button{border-color:ButtonText}.relay-upload-button{background:ButtonText;color:ButtonFace}}
