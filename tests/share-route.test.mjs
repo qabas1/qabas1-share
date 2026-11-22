@@ -33,6 +33,9 @@ test('valid links use the static shell without exposing the token upstream', asy
 
     const invalid = await route.fetch(new Request('https://share.qabas.one/f/invalid'));
     assert.equal(invalid.status, 404);
+    const demo = await route.fetch(new Request('https://share.qabas.one/__demo/'));
+    assert.equal(demo.status, 404);
+    assert.deepEqual(upstreamPaths.slice(-1), ['/404.html']);
     const post = await route.fetch(new Request(`https://share.qabas.one/f/${token}`, { method: 'POST' }));
     assert.equal(post.status, 405);
     assert.equal(post.headers.get('Cache-Control'), 'no-store');

@@ -8,10 +8,15 @@ Small Arabic, right-to-left frontend for managed file links.
 | --- | --- |
 | `/f/:token` | File content, metadata, and download. A valid token has exactly 32 URL-safe characters. |
 | `/r/:token` | Relay request form and evidence upload. A valid token has exactly 43 URL-safe characters. |
+| `/__demo/` | Local-only Relay form preview with sample data. |
 | `/f/:token` with an API error | Focused error state with the available next step. |
 | Any other path | 404. `/` has a static 404 page; `404.html` renders 404 for invalid paths. |
 
 Protected links open a native modal for login, two-factor verification, or a required account password change. A link password is a separate field on the file page. No page has a navigation header. The `/preview/` demo route has been removed.
+
+## Local form demo
+
+Run `python -m http.server 8000` from the repository root and open `http://localhost:8000/__demo/` to preview the Relay form with sample data. The demo uses the production renderer and simulates uploads and submission locally; it does not contact the API. The `__demo/` page is intentionally omitted from the GitHub Pages artifact and production container.
 
 ## API
 
