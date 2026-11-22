@@ -7,6 +7,7 @@ Small Arabic, right-to-left frontend for managed file links.
 | URL | Screen |
 | --- | --- |
 | `/f/:token` | File content, metadata, and download. A valid token has exactly 32 URL-safe characters. |
+| `/r/:token` | Relay request form and evidence upload. A valid token has exactly 43 URL-safe characters. |
 | `/f/:token` with an API error | Focused error state with the available next step. |
 | Any other path | 404. `/` has a static 404 page; `404.html` renders 404 for invalid paths. |
 
@@ -25,6 +26,8 @@ Login, two-factor verification, refresh, required password change, and logout us
 ## Deployment requirements
 
 - In repository **Settings → Pages → Build and deployment**, select **GitHub Actions**. `.github/workflows/pages.yml` publishes the static files on every push to `main`. Keep `share.qabas.one` configured as the Pages custom domain and keep its DNS record proxied through Cloudflare.
+- The Relay page uses the public `/api/v1/r/:token` contract. Each file gets one upload session, raw-byte completion, and evidence status polling. The receipt confirms submission only; the public API has no final submission-status endpoint. A later clarification opens as a separate `/r/:token` link and schema.
+- The Worker also serves `relay.html` with HTTP 200 for valid `/r/:token` paths. Deploy the updated Worker route for both `/f/*` and `/r/*`; GitHub Pages alone returns 404 on direct dynamic paths. The nginx container also routes `/r/:token` to `relay.html`.
 - Deploy `edge/share-route.mjs` with `npx wrangler@latest deploy` after authenticating Wrangler to the Cloudflare account for `qabas.one`. Its route is configured in `wrangler.jsonc` as `share.qabas.one/f/*`. It serves the GitHub Pages shell with HTTP 200 for valid link paths, preserves the URL, and returns 404 for invalid link paths. GitHub Pages alone returns HTTP 404 for a valid dynamic path.
 - The Worker sets `Referrer-Policy: no-referrer` and `Cache-Control: no-store` for `/f/*`. Bypass Cloudflare caching for that path and exclude token-bearing URLs from access logs. The root page is a static 404 design, but Pages returns HTTP 200 for `/`.
 - Allow `share.qabas.one` in the API CORS configuration. Expose `Content-Disposition` and `Retry-After` as needed.

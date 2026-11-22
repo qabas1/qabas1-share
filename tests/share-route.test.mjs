@@ -21,6 +21,16 @@ test('valid links use the static shell without exposing the token upstream', asy
     assert.equal(response.headers.get('Referrer-Policy'), 'no-referrer');
     assert.equal(response.headers.get('ETag'), null);
 
+    const relayToken = 'B'.repeat(43);
+    const relay = await route.fetch(new Request(`https://share.qabas.one/r/${relayToken}`));
+    assert.equal(relay.status, 200);
+    assert.deepEqual(upstreamPaths, ['/404.html', '/relay.html']);
+    assert.equal(relay.headers.get('Referrer-Policy'), 'no-referrer');
+    assert.equal(relay.headers.get('Cache-Control'), 'no-store');
+
+    const badRelay = await route.fetch(new Request('https://share.qabas.one/r/invalid'));
+    assert.equal(badRelay.status, 404);
+
     const invalid = await route.fetch(new Request('https://share.qabas.one/f/invalid'));
     assert.equal(invalid.status, 404);
     const post = await route.fetch(new Request(`https://share.qabas.one/f/${token}`, { method: 'POST' }));

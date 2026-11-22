@@ -1,4 +1,5 @@
-const SHARE_PATH = /^\/f\/[A-Za-z0-9_-]{32}\/?$/;
+const FILE_PATH = /^\/f\/[A-Za-z0-9_-]{32}\/?$/;
+const RELAY_PATH = /^\/r\/[A-Za-z0-9_-]{43}\/?$/;
 
 export default {
   async fetch(request) {
@@ -11,8 +12,9 @@ export default {
       return new Response(null, { status: 405, headers: { ...privateHeaders, Allow: 'GET, HEAD' } });
     }
     const url = new URL(request.url);
-    const valid = SHARE_PATH.test(url.pathname);
-    const shellUrl = new URL('/404.html', url.origin);
+    const relay = RELAY_PATH.test(url.pathname);
+    const valid = FILE_PATH.test(url.pathname) || relay;
+    const shellUrl = new URL(relay ? '/relay.html' : '/404.html', url.origin);
     let upstream;
     try {
       upstream = await fetch(shellUrl, {

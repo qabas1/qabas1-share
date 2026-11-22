@@ -22,11 +22,13 @@ jobs:
       - name: Check recipient script
         run: |
           node --check assets/share.js
+          node --check assets/relay.js
+          node --check assets/relay-api.js
           node --test tests/*.test.mjs
       - name: Prepare static site
         run: |
           mkdir public
-          cp index.html 404.html CNAME .nojekyll public/
+          cp index.html 404.html relay.html CNAME .nojekyll public/
           cp -R assets public/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
